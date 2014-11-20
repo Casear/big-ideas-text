@@ -4,6 +4,7 @@
   var counter = 0,
     headCache = document.getElementsByTagName('head')[0],
     BigIdeasText = {
+      
       DEBUG_MODE: false,
       DEFAULT_MIN_FONT_SIZE_PX: null,
       DEFAULT_MAX_FONT_SIZE_PX: 528,
@@ -99,7 +100,8 @@
           minfontsize: BigIdeasText.DEFAULT_MIN_FONT_SIZE_PX,
           maxfontsize: BigIdeasText.DEFAULT_MAX_FONT_SIZE_PX,
           childSelector: '',
-          resize: true
+          resize: true,
+          inline: false
         }, options || {});
 
         // FIXME Only works if an array is passed in right now
@@ -108,6 +110,9 @@
         {
           var selfStyle = getComputedStyle(self);
           var maxWidth = parseInt(selfStyle.getPropertyValue('width'), 10);
+          var left = parseInt(selfStyle.getPropertyValue('padding-right'), 10);
+          var right = parseInt(selfStyle.getPropertyValue('padding-right'), 10);
+          maxWidth = maxWidth - left - right;
           var id = self.getAttribute('id');
           var children = options.childSelector ? self.querySelectorAll( options.childSelector ) : self.children;
 
@@ -133,9 +138,26 @@
             child.className = child.className.replace(new RegExp('\\b' + BigIdeasText.LINE_CLASS_PREFIX + '\\d+\\b'), '');
             addClass(child, BigIdeasText.LINE_CLASS_PREFIX + lineNumber);
           });
-
           var sizes = calculateSizes(self, children, maxWidth, options.maxfontsize, options.minfontsize);
-          headCache.appendChild(BigIdeasText.generateCss(id, sizes.fontSizes, sizes.wordSpacings, sizes.minFontSizes));
+          if(!options.inline)
+          {
+            headCache.appendChild(BigIdeasText.generateCss(id, sizes.fontSizes, sizes.wordSpacings, sizes.minFontSizes));
+          }
+          else
+          {
+            var nodeLength = self.children.length;
+            for(var i=0;i<nodeLength;i++){
+              if(sizes.minFontSizes[i]){
+                self.children[i].style['white-space'] = 'normal';
+              }
+              if(sizes.fontSizes[i]){
+                self.children[i].style['font-size'] = sizes.fontSizes[i] +'px';
+              }
+              if (sizes.wordSpacings[i]) {
+                self.children[i].style['word-spacing']= sizes.wordSpacings[i] + 'px;';
+              }
+            }
+          }
         });
 
         // return trigger(this, 'bigIdeasText:complete');
@@ -165,7 +187,6 @@
 
   function getComputedStyle(el, pseudo) {
     pseudo = pseudo || null;
-    console.log(el);
     if (!BigIdeasText.supports.wholeNumberFontSizeOnly) {
       return window.getComputedStyle(el, pseudo);
     }

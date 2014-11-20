@@ -1,5 +1,5 @@
 /*!
- * Big Ideas Text v0.1.0, 2014-09-21
+ * Big Ideas Text v0.1.1, 2014-11-07
  * https://github.com/kennethormandy/big-ideas-text
  * Copyright © 2011–2014 Zach Leatherman 
  * Copyright © 2014 Kenneth Ormandy (@kennethormandy)
@@ -12,6 +12,7 @@
   var counter = 0,
     headCache = document.getElementsByTagName('head')[0],
     BigIdeasText = {
+      INLINE_MODE: false,
       DEBUG_MODE: false,
       DEFAULT_MIN_FONT_SIZE_PX: null,
       DEFAULT_MAX_FONT_SIZE_PX: 528,
@@ -141,9 +142,26 @@
             child.className = child.className.replace(new RegExp('\\b' + BigIdeasText.LINE_CLASS_PREFIX + '\\d+\\b'), '');
             addClass(child, BigIdeasText.LINE_CLASS_PREFIX + lineNumber);
           });
-
           var sizes = calculateSizes(self, children, maxWidth, options.maxfontsize, options.minfontsize);
-          headCache.appendChild(BigIdeasText.generateCss(id, sizes.fontSizes, sizes.wordSpacings, sizes.minFontSizes));
+          if(!BigIdeasText.INLINE_MODE)
+          {
+            headCache.appendChild(BigIdeasText.generateCss(id, sizes.fontSizes, sizes.wordSpacings, sizes.minFontSizes));
+          }
+          else
+          {
+            var nodeLength = self.children.length;
+            for(var i=0;i<nodeLength;i++){
+              if(sizes.minFontSizes[i]){
+                self.children[i].style['white-space'] = 'normal';
+              }
+              if(sizes.fontSizes[i]){
+                self.children[i].style['font-size'] = sizes.fontSizes[i] +'px';
+              }
+              if (sizes.wordSpacings[i]) {
+                self.children[i].style['word-spacing']= sizes.wordSpacings[i] + 'px;';
+              }
+            }
+          }
         });
 
         // return trigger(this, 'bigIdeasText:complete');
@@ -173,7 +191,6 @@
 
   function getComputedStyle(el, pseudo) {
     pseudo = pseudo || null;
-    console.log(el);
     if (!BigIdeasText.supports.wholeNumberFontSizeOnly) {
       return window.getComputedStyle(el, pseudo);
     }
